@@ -63,8 +63,8 @@ def format_auhors(list_of_authors):
             if k < lengh_name - 1 and elm != 'DE' and elm != 'DA':
                 try:
                     get_name.append(elm[0] + '.')
-                except IndexError:
-                    print('ERROR: IndexError: string index out of range')
+                except Exception as err:
+                    print('Erro [funciton: format_authors]:', err)
         get_name = ' '.join(get_name)
         citation_name.append(get_name)
     citation_name = '; '.join(citation_name)
@@ -87,15 +87,17 @@ def get_articles(records, y_start=present_year - 5, y_end=present_year):
             page_end = art[1].attrib['PAGINA-FINAL']
             # print(f'{first_author}, {year}, {title}, {journal}, {volume}, {number}, {page_init}, {page_end}')
             authors = list()
-            a_index = 2
-            while a_index >= 2:
+            count_autors = 0
+            for data in art:
+                if data.tag == 'AUTORES':
+                    count_autors += 1
+            # print('Number of authors found:', count_autors)
+            for a_index in range(2, count_autors+2):
                 try:
                     author = art[a_index].attrib['NOME-COMPLETO-DO-AUTOR']
                     authors.append(author.upper().replace("'", ''))
-                    a_index += 1
-                except KeyError:
-                    break
-                except IndexError:
+                except Exception as err:
+                    print('Erro tentando formatar autores:', err)
                     break
             authors = format_auhors(authors)
             # print(f'{journal}, {volume}({fasc}): {page_init}-{page_end}')
@@ -135,15 +137,17 @@ def get_books(records, y_start=present_year - 5, y_end=present_year):
             # first_author = book[2].attrib['NOME-COMPLETO-DO-AUTOR']
             # print(f'{first_author}, {year}, {title}, {n_pages}, {isbn}, {type}, {release}')
             authors = list()
-            a_index = 2
-            while a_index >= 2:
+            count_autors = 0
+            for data in book:
+                if data.tag == 'AUTORES':
+                    count_autors += 1
+            # print('Number of authors found:', count_autors)
+            for a_index in range(2, count_autors+2):
                 try:
                     author = book[a_index].attrib['NOME-COMPLETO-DO-AUTOR']
                     authors.append(author.upper().replace("'", ''))
-                    a_index += 1
-                except KeyError:
-                    break
-                except IndexError:
+                except Exception as err:
+                    print('Erro tentando formatar autores:', err)
                     break
             authors = format_auhors(authors)
             book_data = {
@@ -177,17 +181,17 @@ def get_chapters(records, y_start=present_year - 5, y_end=present_year):
             if not isbn:
                 isbn = 'no data'
             authors = list()
-            a_index = 2
-            while a_index >= 2:
+            count_autors = 0
+            for data in chapter:
+                if data.tag == 'AUTORES':
+                    count_autors += 1
+            # print('Number of authors found:', count_autors)
+            for a_index in range(2, count_autors+2):
                 try:
                     author = chapter[a_index].attrib['NOME-COMPLETO-DO-AUTOR']
                     authors.append(author.upper().replace("'", ''))
-                    a_index += 1
-                except KeyError:
-                    break
-                except IndexError:
-                    break
-                except TypeError:
+                except Exception as err:
+                    print('Erro tentando formatar autores:', err)
                     break
             authors = format_auhors(authors)
             chapter_data = {
@@ -234,26 +238,26 @@ def main(lattes_list):
         elif n_lattes > 1:
             xlsx_file = 'compiled_lattes.xlsx'
             if idx == 0:
-                print('initiating dataframe', lattes)
+                print('Initiating dataframe', lattes)
                 compiled_articles_pd = pd.DataFrame(compiled_articles)
                 compiled_books_pd = pd.DataFrame(compiled_books)
                 compiled_chapters_pd = pd.DataFrame(compiled_chapters)
             if 0 < idx < n_lattes - 1:
-                print('appendink to dataframe', lattes)
+                print('Appending to dataframe', lattes)
                 try:
                     compiled_articles_pd = compiled_articles_pd.append(compiled_articles, ignore_index=True)
                     compiled_books_pd = compiled_books_pd.append(compiled_books, ignore_index=True)
                     compiled_chapters_pd = compiled_chapters_pd.append(compiled_chapters, ignore_index=True)
-                except IndexError:
-                    print(IndexError)
+                except Exception as err:
+                    print(f'WARNING: Books or chapters have no records ({err}).')
             if idx == n_lattes - 1:
                 print('writing dataframe', lattes)
                 try:
                     compiled_articles_pd = compiled_articles_pd.append(compiled_articles, ignore_index=True)
                     compiled_books_pd = compiled_books_pd.append(compiled_books, ignore_index=True)
                     compiled_chapters_pd = compiled_chapters_pd.append(compiled_chapters, ignore_index=True)
-                except IndexError:
-                    print(IndexError)
+                except Exception as err:
+                    print(f'WARNING: Books or chapters have no records ({err}).')
                 # sorting and removing duplicates
                 compiled_articles_pd.sort_values('year', inplace=True)
                 compiled_articles_pd.drop_duplicates(subset='title', inplace=True)
